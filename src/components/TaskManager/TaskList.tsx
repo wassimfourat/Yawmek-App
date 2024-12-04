@@ -4,6 +4,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import SearchBar from "./SearchBar";
 
 type Priority = "high" | "medium" | "low";
+type SortOption = "priority" | "date" | "title";
 
 interface Task {
   id: string;
@@ -31,6 +32,7 @@ interface TaskListProps {
   }) => void;
   onDeleteTask?: (id: string) => void;
   onToggleNotifications?: (id: string, enabled: boolean, time?: Date) => void;
+  defaultSort?: SortOption;
 }
 
 const TaskList = ({
@@ -41,6 +43,7 @@ const TaskList = ({
   onEditTask = () => {},
   onDeleteTask = () => {},
   onToggleNotifications = () => {},
+  defaultSort = "priority",
 }: TaskListProps) => {
   const [activeCollapsed, setActiveCollapsed] = React.useState(false);
   const [completedCollapsed, setCompletedCollapsed] = React.useState(false);
@@ -58,26 +61,42 @@ const TaskList = ({
     );
   };
 
-  // Sort tasks by priority and pinned status
-  const sortedActiveTasks = [...filterTasks(activeTasks)].sort((a, b) => {
-    // First sort by pinned status
-    if (a.pinned !== b.pinned) {
-      return a.pinned ? -1 : 1;
-    }
-
-    // Then sort by priority
+  // Sort tasks based on selected option
+  const sortTasks = (tasks: Task[]) => {
     const priorityOrder = { high: 0, medium: 1, low: 2 };
-    return priorityOrder[a.priority] - priorityOrder[b.priority];
-  });
 
-  const filteredCompletedTasks = filterTasks(completedTasks);
+    return [...tasks].sort((a, b) => {
+      // Always prioritize pinned tasks
+      if (a.pinned !== b.pinned) {
+        return a.pinned ? -1 : 1;
+      }
+
+      switch (defaultSort) {
+        case "priority":
+          return priorityOrder[a.priority] - priorityOrder[b.priority];
+
+        case "date":
+          if (!a.date || !b.date) return 0;
+          return new Date(a.date).getTime() - new Date(b.date).getTime();
+
+        case "title":
+          return a.title.localeCompare(b.title);
+
+        default:
+          return 0;
+      }
+    });
+  };
+
+  const sortedActiveTasks = sortTasks(filterTasks(activeTasks));
+  const sortedCompletedTasks = sortTasks(filterTasks(completedTasks));
 
   return (
     <div className="w-[390px] h-[684px] bg-background">
       <div className="px-4 py-2">
         <SearchBar value={searchQuery} onChange={setSearchQuery} />
       </div>
-      <ScrollArea className="h-[calc(100%-48px)] px-4">
+      <ScrollArea className="h-[calc(100%-56px)] px-4">
         <div className="space-y-4">
           <TaskSection
             title={`Active Tasks (${sortedActiveTasks.length})`}
@@ -91,8 +110,8 @@ const TaskList = ({
             onToggleNotifications={onToggleNotifications}
           />
           <TaskSection
-            title={`Completed Tasks (${filteredCompletedTasks.length})`}
-            tasks={filteredCompletedTasks}
+            title={`Completed Tasks (${sortedCompletedTasks.length})`}
+            tasks={sortedCompletedTasks}
             isCollapsed={completedCollapsed}
             onToggleCollapse={() => setCompletedCollapsed(!completedCollapsed)}
             onToggleComplete={onToggleComplete}

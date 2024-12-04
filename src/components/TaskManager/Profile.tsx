@@ -4,12 +4,21 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { BellRing, Moon, Sun, User } from "lucide-react";
+import { BellRing, ArrowUpDown, Globe, User, Settings2 } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import BottomNav from "./BottomNav";
 import EditProfileDialog from "./EditProfileDialog";
-import { useTheme } from "@/lib/theme-provider";
+import TaskStatistics from "./TaskStatistics";
+import { timeZoneOptions, getUserTimeZone } from "@/lib/timezone";
 
 type Priority = "high" | "medium" | "low";
+type DefaultSort = "priority" | "date" | "title";
 
 interface Task {
   id: string;
@@ -22,40 +31,62 @@ interface Task {
 }
 
 interface ProfileProps {
-  user?: {
-    name: string;
-    email: string;
-    avatar?: string;
-  };
+  onSortChange?: (sort: DefaultSort) => void;
+  defaultSort?: DefaultSort;
   tasks?: Task[];
 }
 
 const Profile = ({
-  user = {
-    name: "John Doe",
-    email: "john@example.com",
-  },
+  onSortChange = () => {},
+  defaultSort = "priority",
   tasks = [],
 }: ProfileProps) => {
-  const { theme, setTheme } = useTheme();
   const [notifications, setNotifications] = React.useState(true);
+  const [timeZone, setTimeZone] = React.useState(getUserTimeZone());
+  const [activeTab] = React.useState<"home" | "calendar" | "profile">(
+    "profile",
+  );
   const [isEditProfileOpen, setIsEditProfileOpen] = React.useState(false);
-  const [activeTab, setActiveTab] = React.useState<
-    "home" | "calendar" | "profile"
-  >("profile");
+  const [user, setUser] = React.useState({
+    name: "John Doe",
+    email: "john@example.com",
+    avatar: "",
+  });
 
-  // Calculate task statistics
-  const completedTasksCount = tasks.filter((task) => task.completed).length;
-  const activeTasksCount = tasks.filter((task) => !task.completed).length;
+  const handleTimeZoneChange = (value: string) => {
+    setTimeZone(value);
+    localStorage.setItem("timeZone", value);
+  };
+
+  const handleNotificationsChange = (enabled: boolean) => {
+    setNotifications(enabled);
+    localStorage.setItem("notifications", String(enabled));
+  };
 
   const handleSaveProfile = (updatedUser: {
     name: string;
     email: string;
     avatar?: string;
   }) => {
-    // Here you would typically update the user data in your backend
-    console.log("Updated user:", updatedUser);
+    setUser(updatedUser);
+    localStorage.setItem("user", JSON.stringify(updatedUser));
   };
+
+  // Load saved preferences on mount
+  React.useEffect(() => {
+    const savedTimeZone = localStorage.getItem("timeZone");
+    if (savedTimeZone) setTimeZone(savedTimeZone);
+
+    const savedNotifications = localStorage.getItem("notifications");
+    if (savedNotifications !== null) {
+      setNotifications(savedNotifications === "true");
+    }
+
+    const savedUser = localStorage.getItem("user");
+    if (savedUser) {
+      setUser(JSON.parse(savedUser));
+    }
+  }, []);
 
   return (
     <div className="w-[390px] h-[844px] bg-background flex flex-col items-center relative">
@@ -63,12 +94,12 @@ const Profile = ({
         {/* Profile Card */}
         <Card className="p-6">
           <div className="flex items-center space-x-4">
-            <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center">
+            <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center overflow-hidden">
               {user.avatar ? (
                 <img
                   src={user.avatar}
                   alt={user.name}
-                  className="w-16 h-16 rounded-full"
+                  className="w-full h-full object-cover"
                 />
               ) : (
                 <User className="w-8 h-8 text-purple-600" />
@@ -88,85 +119,94 @@ const Profile = ({
           >
             Edit Profile
           </Button>
-          <EditProfileDialog
-            open={isEditProfileOpen}
-            onOpenChange={setIsEditProfileOpen}
-            user={user}
-            onSave={handleSaveProfile}
-          />
         </Card>
 
-        {/* Settings Card */}
-        <Card className="p-6 space-y-6">
-          <h3 className="text-lg font-semibold text-foreground">Settings</h3>
+        {/* Task Statistics */}
+        <TaskStatistics tasks={tasks} />
 
+        {/* App Settings Card */}
+        <Card className="p-6 space-y-6">
+          <div className="flex items-center gap-2">
+            <Settings2 className="w-5 h-5 text-purple-600" />
+            <h3 className="text-lg font-semibold text-foreground">
+              App Settings
+            </h3>
+          </div>
+
+          {/* Task Preferences */}
           <div className="space-y-4">
-            {/* Dark Mode */}
+            <h4 className="text-sm font-medium text-muted-foreground">
+              Task Preferences
+            </h4>
+
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
-                {theme === "dark" ? (
-                  <Moon className="w-5 h-5 text-purple-600" />
-                ) : (
-                  <Sun className="w-5 h-5 text-purple-600" />
-                )}
-                <Label htmlFor="dark-mode" className="text-foreground">
-                  Dark Mode
-                </Label>
+                <ArrowUpDown className="w-5 h-5 text-purple-600" />
+                <Label className="text-sm font-normal">Default Sort</Label>
               </div>
-              <Switch
-                id="dark-mode"
-                checked={theme === "dark"}
-                onCheckedChange={(checked) =>
-                  setTheme(checked ? "dark" : "light")
-                }
-              />
+              <Select value={defaultSort} onValueChange={onSortChange}>
+                <SelectTrigger className="w-[140px]">
+                  <SelectValue placeholder="Priority" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="priority">Priority</SelectItem>
+                  <SelectItem value="date">Due Date</SelectItem>
+                  <SelectItem value="title">Title</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
-            <Separator />
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <Globe className="w-5 h-5 text-purple-600" />
+                <Label className="text-sm font-normal">Time Zone</Label>
+              </div>
+              <Select value={timeZone} onValueChange={handleTimeZoneChange}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Tunisia (UTC+1)" />
+                </SelectTrigger>
+                <SelectContent>
+                  {timeZoneOptions.map((tz) => (
+                    <SelectItem key={tz.value} value={tz.value}>
+                      {tz.label} ({tz.offset})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
 
-            {/* Notifications */}
+          <Separator />
+
+          {/* Notifications */}
+          <div className="space-y-4">
+            <h4 className="text-sm font-medium text-muted-foreground">
+              Notifications
+            </h4>
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
                 <BellRing className="w-5 h-5 text-purple-600" />
-                <Label htmlFor="notifications" className="text-foreground">
-                  Notifications
+                <Label className="text-sm font-normal">
+                  Push Notifications
                 </Label>
               </div>
               <Switch
-                id="notifications"
                 checked={notifications}
-                onCheckedChange={setNotifications}
+                onCheckedChange={handleNotificationsChange}
               />
-            </div>
-          </div>
-        </Card>
-
-        {/* Stats Card */}
-        <Card className="p-6">
-          <h3 className="text-lg font-semibold mb-4 text-foreground">
-            Task Statistics
-          </h3>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
-              <p className="text-sm text-purple-600 dark:text-purple-400">
-                Completed Tasks
-              </p>
-              <p className="text-2xl font-semibold text-foreground">
-                {completedTasksCount}
-              </p>
-            </div>
-            <div className="p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
-              <p className="text-sm text-purple-600 dark:text-purple-400">
-                Active Tasks
-              </p>
-              <p className="text-2xl font-semibold text-foreground">
-                {activeTasksCount}
-              </p>
             </div>
           </div>
         </Card>
       </div>
-      <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
+
+      <EditProfileDialog
+        open={isEditProfileOpen}
+        onOpenChange={setIsEditProfileOpen}
+        user={user}
+        onSave={handleSaveProfile}
+      />
+
+      <BottomNav activeTab={activeTab} onTabChange={() => {}} />
     </div>
   );
 };

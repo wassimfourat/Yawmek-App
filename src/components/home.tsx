@@ -3,13 +3,16 @@ import Header from "./TaskManager/Header";
 import TaskList from "./TaskManager/TaskList";
 import BottomNav from "./TaskManager/BottomNav";
 
+type Priority = "high" | "medium" | "low";
+type DefaultSort = "priority" | "date" | "title";
+
 interface Task {
   id: string;
   title: string;
   completed: boolean;
   pinned: boolean;
   category: "work" | "personal";
-  priority: "high" | "medium" | "low";
+  priority: Priority;
   date?: Date;
   notifications: boolean;
   notificationTime?: Date;
@@ -22,13 +25,14 @@ interface HomeProps {
     id: string;
     title: string;
     category: "work" | "personal";
-    priority: "high" | "medium" | "low";
+    priority: Priority;
     date: Date;
   }) => void;
   onToggleComplete: (id: string) => void;
   onTogglePin: (id: string) => void;
   onDeleteTask: (id: string) => void;
   onToggleNotifications: (id: string, enabled: boolean, time?: Date) => void;
+  defaultSort: DefaultSort;
 }
 
 const Home = ({
@@ -39,6 +43,7 @@ const Home = ({
   onTogglePin,
   onDeleteTask,
   onToggleNotifications,
+  defaultSort,
 }: HomeProps) => {
   const [selectedCategory, setSelectedCategory] = React.useState("all");
   const [isAddTaskOpen, setIsAddTaskOpen] = React.useState(false);
@@ -103,6 +108,7 @@ const Home = ({
         onEditTask={onEditTask}
         onDeleteTask={onDeleteTask}
         onToggleNotifications={onToggleNotifications}
+        defaultSort={defaultSort}
       />
       <BottomNav activeTab={activeTab} onTabChange={handleTabChange} />
     </div>

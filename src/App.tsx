@@ -1,4 +1,4 @@
-import { Suspense, useState } from "react";
+import { Suspense, useState, useEffect } from "react";
 import { useRoutes, Routes, Route } from "react-router-dom";
 import Home from "./components/home";
 import Calendar from "./components/TaskManager/Calendar";
@@ -9,6 +9,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { useToast } from "@/components/ui/use-toast";
 
 type Priority = "high" | "medium" | "low";
+type DefaultSort = "priority" | "date" | "title";
 
 interface Task {
   id: string;
@@ -22,19 +23,9 @@ interface Task {
   notificationTime?: Date;
 }
 
-interface User {
-  name: string;
-  email: string;
-  avatar?: string;
-}
-
 function App() {
   const { toast } = useToast();
-  const [user, setUser] = useState<User>({
-    name: "John Doe",
-    email: "john@example.com",
-  });
-
+  const [defaultSort, setDefaultSort] = useState<DefaultSort>("priority");
   const [tasks, setTasks] = useState<Task[]>([
     {
       id: "1",
@@ -70,33 +61,17 @@ function App() {
     },
   ]);
 
-  const handleUpdateUser = (updatedUser: User) => {
-    setUser(updatedUser);
-    toast({
-      title: "Profile Updated",
-      description: "Your profile has been updated successfully.",
-      variant: "success",
-    });
+  const handleSortChange = (newSort: DefaultSort) => {
+    setDefaultSort(newSort);
+    localStorage.setItem("defaultSort", newSort);
   };
 
-  const handleToggleNotifications = (
-    taskId: string,
-    enabled: boolean,
-    notificationTime?: Date,
-  ) => {
-    setTasks((prevTasks) =>
-      prevTasks.map((task) => {
-        if (task.id === taskId) {
-          toast({
-            title: enabled ? "Notifications Enabled" : "Notifications Disabled",
-            description: `${enabled ? "You will receive notifications for" : "Notifications turned off for"}: ${task.title}`,
-          });
-          return { ...task, notifications: enabled, notificationTime };
-        }
-        return task;
-      }),
-    );
-  };
+  useEffect(() => {
+    const savedSort = localStorage.getItem("defaultSort") as DefaultSort;
+    if (savedSort) {
+      setDefaultSort(savedSort);
+    }
+  }, []);
 
   const handleToggleComplete = (taskId: string) => {
     setTasks((prevTasks) =>
@@ -172,6 +147,25 @@ function App() {
     });
   };
 
+  const handleToggleNotifications = (
+    taskId: string,
+    enabled: boolean,
+    notificationTime?: Date,
+  ) => {
+    setTasks((prevTasks) =>
+      prevTasks.map((task) => {
+        if (task.id === taskId) {
+          toast({
+            title: enabled ? "Notifications Enabled" : "Notifications Disabled",
+            description: `${enabled ? "You will receive notifications for" : "Notifications turned off for"}: ${task.title}`,
+          });
+          return { ...task, notifications: enabled, notificationTime };
+        }
+        return task;
+      }),
+    );
+  };
+
   return (
     <ThemeProvider defaultTheme="light" storageKey="task-app-theme">
       <Suspense fallback={<p>Loading...</p>}>
@@ -189,6 +183,7 @@ function App() {
                     onTogglePin={handleTogglePin}
                     onDeleteTask={handleDeleteTask}
                     onToggleNotifications={handleToggleNotifications}
+                    defaultSort={defaultSort}
                   />
                 }
               />
@@ -210,8 +205,8 @@ function App() {
                 element={
                   <Profile
                     tasks={tasks}
-                    user={user}
-                    onUpdateUser={handleUpdateUser}
+                    onSortChange={handleSortChange}
+                    defaultSort={defaultSort}
                   />
                 }
               />
