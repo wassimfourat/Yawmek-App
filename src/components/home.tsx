@@ -9,7 +9,10 @@ interface Task {
   completed: boolean;
   pinned: boolean;
   category: "work" | "personal";
+  priority: "high" | "medium" | "low";
   date?: Date;
+  notifications: boolean;
+  notificationTime?: Date;
 }
 
 interface HomeProps {
@@ -19,11 +22,13 @@ interface HomeProps {
     id: string;
     title: string;
     category: "work" | "personal";
+    priority: "high" | "medium" | "low";
     date: Date;
   }) => void;
   onToggleComplete: (id: string) => void;
   onTogglePin: (id: string) => void;
   onDeleteTask: (id: string) => void;
+  onToggleNotifications: (id: string, enabled: boolean, time?: Date) => void;
 }
 
 const Home = ({
@@ -33,6 +38,7 @@ const Home = ({
   onToggleComplete,
   onTogglePin,
   onDeleteTask,
+  onToggleNotifications,
 }: HomeProps) => {
   const [selectedCategory, setSelectedCategory] = React.useState("all");
   const [isAddTaskOpen, setIsAddTaskOpen] = React.useState(false);
@@ -48,6 +54,8 @@ const Home = ({
     title: string;
     category: "work" | "personal";
     date: Date;
+    notifications: boolean;
+    notificationTime?: Date;
   }) => {
     setTasks((prevTasks) => [
       ...prevTasks,
@@ -58,6 +66,9 @@ const Home = ({
         date: newTask.date,
         completed: false,
         pinned: false,
+        priority: "medium",
+        notifications: newTask.notifications,
+        notificationTime: newTask.notificationTime,
       },
     ]);
     setIsAddTaskOpen(false);
@@ -76,7 +87,7 @@ const Home = ({
   const completedTasks = filteredTasks.filter((task) => task.completed);
 
   return (
-    <div className="w-screen h-screen bg-background flex flex-col items-center relative">
+    <div className="w-[390px] h-[844px] bg-background flex flex-col items-center">
       <Header
         selectedCategory={selectedCategory}
         onCategoryChange={handleCategoryChange}
@@ -91,6 +102,7 @@ const Home = ({
         onTogglePin={onTogglePin}
         onEditTask={onEditTask}
         onDeleteTask={onDeleteTask}
+        onToggleNotifications={onToggleNotifications}
       />
       <BottomNav activeTab={activeTab} onTabChange={handleTabChange} />
     </div>

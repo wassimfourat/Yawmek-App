@@ -1,6 +1,8 @@
 import React from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -8,7 +10,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, Bell, Clock } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 
@@ -17,6 +19,8 @@ interface NewTaskFormProps {
     title: string;
     category: "work" | "personal";
     date: Date;
+    notifications: boolean;
+    notificationTime?: Date;
   }) => void;
   onCancel?: () => void;
 }
@@ -28,14 +32,33 @@ const NewTaskForm = ({
   const [title, setTitle] = React.useState("");
   const [category, setCategory] = React.useState<"work" | "personal">("work");
   const [date, setDate] = React.useState<Date>(new Date());
+  const [notifications, setNotifications] = React.useState(false);
+  const [notificationTime, setNotificationTime] = React.useState("09:00");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) return;
-    onSubmit({ title, category, date });
+
+    let notificationDate;
+    if (notifications) {
+      const [hours, minutes] = notificationTime.split(":").map(Number);
+      notificationDate = new Date(date);
+      notificationDate.setHours(hours, minutes);
+    }
+
+    onSubmit({
+      title,
+      category,
+      date,
+      notifications,
+      notificationTime: notificationDate,
+    });
+
     setTitle("");
     setCategory("work");
     setDate(new Date());
+    setNotifications(false);
+    setNotificationTime("09:00");
   };
 
   return (
@@ -91,6 +114,28 @@ const NewTaskForm = ({
           />
         </PopoverContent>
       </Popover>
+
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Bell className="h-4 w-4 text-purple-600" />
+            <Label>Set Alarm</Label>
+          </div>
+          <Switch checked={notifications} onCheckedChange={setNotifications} />
+        </div>
+
+        {notifications && (
+          <div className="flex items-center gap-2">
+            <Clock className="h-4 w-4 text-muted-foreground" />
+            <Input
+              type="time"
+              value={notificationTime}
+              onChange={(e) => setNotificationTime(e.target.value)}
+              className="w-full"
+            />
+          </div>
+        )}
+      </div>
 
       <div className="flex justify-end gap-3">
         <Button

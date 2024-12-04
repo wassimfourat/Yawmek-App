@@ -2,13 +2,18 @@ import React from "react";
 import TaskItem from "./TaskItem";
 import { ChevronDown, ChevronUp } from "lucide-react";
 
+type Priority = "high" | "medium" | "low";
+
 interface Task {
   id: string;
   title: string;
   completed: boolean;
   pinned: boolean;
   category: "work" | "personal";
+  priority: Priority;
   date?: Date;
+  notifications: boolean;
+  notificationTime?: Date;
 }
 
 interface TaskSectionProps {
@@ -22,9 +27,11 @@ interface TaskSectionProps {
     id: string;
     title: string;
     category: "work" | "personal";
+    priority: Priority;
     date: Date;
   }) => void;
   onDeleteTask?: (id: string) => void;
+  onToggleNotifications?: (id: string, enabled: boolean, time?: Date) => void;
 }
 
 const TaskSection = ({
@@ -36,6 +43,7 @@ const TaskSection = ({
   onTogglePin = () => {},
   onEditTask = () => {},
   onDeleteTask = () => {},
+  onToggleNotifications = () => {},
 }: TaskSectionProps) => {
   return (
     <div className="w-[390px] bg-card p-4 space-y-3 border border-border rounded-lg">
@@ -63,6 +71,7 @@ const TaskSection = ({
               onTogglePin={onTogglePin}
               onEdit={onEditTask}
               onDelete={onDeleteTask}
+              onToggleNotifications={onToggleNotifications}
             />
           ))}
         </div>

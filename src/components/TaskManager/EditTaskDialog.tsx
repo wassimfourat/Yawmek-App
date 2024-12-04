@@ -10,9 +10,11 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, Flag } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+
+type Priority = "high" | "medium" | "low";
 
 interface EditTaskDialogProps {
   open?: boolean;
@@ -21,15 +23,30 @@ interface EditTaskDialogProps {
     id: string;
     title: string;
     category: "work" | "personal";
+    priority: Priority;
     date: Date;
   };
   onSave?: (task: {
     id: string;
     title: string;
     category: "work" | "personal";
+    priority: Priority;
     date: Date;
   }) => void;
 }
+
+const getPriorityColor = (priority: Priority) => {
+  switch (priority) {
+    case "high":
+      return "text-red-500";
+    case "medium":
+      return "text-yellow-500";
+    case "low":
+      return "text-green-500";
+    default:
+      return "text-gray-500";
+  }
+};
 
 const EditTaskDialog = ({
   open = false,
@@ -38,6 +55,7 @@ const EditTaskDialog = ({
     id: "",
     title: "",
     category: "work" as const,
+    priority: "medium" as Priority,
     date: new Date(),
   },
   onSave = () => {},
@@ -46,19 +64,21 @@ const EditTaskDialog = ({
   const [category, setCategory] = React.useState<"work" | "personal">(
     task.category,
   );
+  const [priority, setPriority] = React.useState<Priority>(task.priority);
   const [date, setDate] = React.useState<Date>(task.date);
 
   React.useEffect(() => {
     if (open) {
       setTitle(task.title);
       setCategory(task.category);
+      setPriority(task.priority);
       setDate(task.date);
     }
   }, [open, task]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave({ id: task.id, title, category, date });
+    onSave({ id: task.id, title, category, priority, date });
     onOpenChange(false);
   };
 
@@ -102,6 +122,28 @@ const EditTaskDialog = ({
                     Personal
                   </Label>
                 </div>
+              </RadioGroup>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Priority</Label>
+              <RadioGroup
+                value={priority}
+                onValueChange={(value) => setPriority(value as Priority)}
+                className="flex gap-4"
+              >
+                {(["high", "medium", "low"] as Priority[]).map((p) => (
+                  <div key={p} className="flex items-center space-x-2">
+                    <RadioGroupItem value={p} id={`priority-${p}`} />
+                    <Label
+                      htmlFor={`priority-${p}`}
+                      className={`cursor-pointer flex items-center gap-1 ${getPriorityColor(p)}`}
+                    >
+                      <Flag className="h-4 w-4" fill="currentColor" />
+                      <span className="capitalize">{p}</span>
+                    </Label>
+                  </div>
+                ))}
               </RadioGroup>
             </div>
 

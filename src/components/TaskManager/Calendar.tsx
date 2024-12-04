@@ -6,25 +6,42 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import TaskItem from "./TaskItem";
 import BottomNav from "./BottomNav";
 
+type Priority = "high" | "medium" | "low";
+
 interface Task {
   id: string;
   title: string;
   completed: boolean;
   pinned: boolean;
   category: "work" | "personal";
+  priority: Priority;
   date?: Date;
+  notifications: boolean;
+  notificationTime?: Date;
 }
 
 interface CalendarProps {
   tasks?: Task[];
   onToggleComplete?: (id: string) => void;
   onTogglePin?: (id: string) => void;
+  onEditTask?: (task: {
+    id: string;
+    title: string;
+    category: "work" | "personal";
+    priority: Priority;
+    date: Date;
+  }) => void;
+  onDeleteTask?: (id: string) => void;
+  onToggleNotifications?: (id: string, enabled: boolean, time?: Date) => void;
 }
 
 const Calendar = ({
   tasks = [],
   onToggleComplete = () => {},
   onTogglePin = () => {},
+  onEditTask = () => {},
+  onDeleteTask = () => {},
+  onToggleNotifications = () => {},
 }: CalendarProps) => {
   const [date, setDate] = React.useState<Date>(new Date());
   const [activeTab, setActiveTab] = React.useState<
@@ -36,9 +53,9 @@ const Calendar = ({
   );
 
   return (
-    <div className="w-screen h-screen bg-gray-50 flex flex-col items-center pb-[100px]">
-      <div className="w-full max-w-md p-4 space-y-6">
-        <Card className="p-6 shadow-lg border-purple-100">
+    <div className="w-[390px] h-[844px] bg-background flex flex-col items-center">
+      <div className="w-[390px] p-4 space-y-4 pb-[100px] overflow-auto">
+        <Card className="p-4 shadow-lg border-purple-100">
           <h2 className="text-xl font-semibold mb-4 text-purple-800">
             Calendar
           </h2>
@@ -67,7 +84,7 @@ const Calendar = ({
           />
         </Card>
 
-        <Card className="p-6 shadow-lg border-purple-100">
+        <Card className="p-4 shadow-lg border-purple-100">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold text-purple-800">
               Tasks for {date?.toLocaleDateString()}
@@ -76,14 +93,17 @@ const Calendar = ({
               {selectedDateTasks.length} tasks
             </span>
           </div>
-          <ScrollArea className="h-[300px] pr-4">
-            <div className="space-y-3">
+          <ScrollArea className="h-[300px]">
+            <div className="space-y-3 pr-4">
               {selectedDateTasks.map((task) => (
                 <TaskItem
                   key={task.id}
                   {...task}
                   onToggleComplete={onToggleComplete}
                   onTogglePin={onTogglePin}
+                  onEdit={onEditTask}
+                  onDelete={onDeleteTask}
+                  onToggleNotifications={onToggleNotifications}
                 />
               ))}
               {selectedDateTasks.length === 0 && (

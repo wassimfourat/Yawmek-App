@@ -9,12 +9,15 @@ import BottomNav from "./BottomNav";
 import EditProfileDialog from "./EditProfileDialog";
 import { useTheme } from "@/lib/theme-provider";
 
+type Priority = "high" | "medium" | "low";
+
 interface Task {
   id: string;
   title: string;
   completed: boolean;
   pinned: boolean;
   category: "work" | "personal";
+  priority: Priority;
   date?: Date;
 }
 
@@ -37,6 +40,9 @@ const Profile = ({
   const { theme, setTheme } = useTheme();
   const [notifications, setNotifications] = React.useState(true);
   const [isEditProfileOpen, setIsEditProfileOpen] = React.useState(false);
+  const [activeTab, setActiveTab] = React.useState<
+    "home" | "calendar" | "profile"
+  >("profile");
 
   // Calculate task statistics
   const completedTasksCount = tasks.filter((task) => task.completed).length;
@@ -52,8 +58,8 @@ const Profile = ({
   };
 
   return (
-    <div className="w-screen h-screen bg-background flex flex-col items-center pb-[100px]">
-      <div className="w-full max-w-md p-4 space-y-4">
+    <div className="w-[390px] h-[844px] bg-background flex flex-col items-center relative">
+      <div className="w-full max-w-md p-4 space-y-4 pb-[100px] overflow-auto">
         {/* Profile Card */}
         <Card className="p-6">
           <div className="flex items-center space-x-4">
@@ -160,7 +166,7 @@ const Profile = ({
           </div>
         </Card>
       </div>
-      <BottomNav activeTab="profile" />
+      <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
     </div>
   );
 };
