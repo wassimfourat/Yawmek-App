@@ -21,10 +21,10 @@ const BottomNav = ({
   };
 
   return (
-    <div className="w-[390px] h-[100px] bg-card border-t border-border flex items-center justify-around px-6 fixed bottom-0">
+    <div className="fixed bottom-0 w-[390px] h-[84px] bg-card border-t border-border flex items-center justify-around px-6">
       <button
         onClick={() => handleTabClick("home")}
-        className={`flex flex-col items-center space-y-1 p-2 rounded-lg ${activeTab === "home" ? "text-purple-600" : "text-muted-foreground"} hover:text-purple-600`}
+        className={`flex flex-col items-center space-y-1 ${activeTab === "home" ? "text-purple-600" : "text-muted-foreground"} hover:text-purple-600`}
       >
         <HomeIcon className="h-6 w-6" />
         <span className="text-xs font-medium">Home</span>
@@ -32,7 +32,7 @@ const BottomNav = ({
 
       <button
         onClick={() => handleTabClick("calendar")}
-        className={`flex flex-col items-center space-y-1 p-2 rounded-lg ${activeTab === "calendar" ? "text-purple-600" : "text-muted-foreground"} hover:text-purple-600`}
+        className={`flex flex-col items-center space-y-1 ${activeTab === "calendar" ? "text-purple-600" : "text-muted-foreground"} hover:text-purple-600`}
       >
         <CalendarIcon className="h-6 w-6" />
         <span className="text-xs font-medium">Calendar</span>
@@ -40,7 +40,7 @@ const BottomNav = ({
 
       <button
         onClick={() => handleTabClick("profile")}
-        className={`flex flex-col items-center space-y-1 p-2 rounded-lg ${activeTab === "profile" ? "text-purple-600" : "text-muted-foreground"} hover:text-purple-600`}
+        className={`flex flex-col items-center space-y-1 ${activeTab === "profile" ? "text-purple-600" : "text-muted-foreground"} hover:text-purple-600`}
       >
         <UserIcon className="h-6 w-6" />
         <span className="text-xs font-medium">Profile</span>

@@ -92,7 +92,7 @@ const Home = ({
   const completedTasks = filteredTasks.filter((task) => task.completed);
 
   return (
-    <div className="w-[390px] h-[844px] bg-background flex flex-col items-center">
+    <div className="w-[420px] h-[900px] bg-background flex flex-col items-center">
       <Header
         selectedCategory={selectedCategory}
         onCategoryChange={handleCategoryChange}

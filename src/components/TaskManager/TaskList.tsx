@@ -92,11 +92,11 @@ const TaskList = ({
   const sortedCompletedTasks = sortTasks(filterTasks(completedTasks));
 
   return (
-    <div className="w-[390px] h-[684px] bg-background">
-      <div className="px-4 py-2">
+    <div className="w-[420px] h-[740px] bg-background flex flex-col">
+      <div className="p-4">
         <SearchBar value={searchQuery} onChange={setSearchQuery} />
       </div>
-      <ScrollArea className="h-[calc(100%-56px)] px-4">
+      <ScrollArea className="flex-1 px-4 pb-4">
         <div className="space-y-4">
           <TaskSection
             title={`Active Tasks (${sortedActiveTasks.length})`}
