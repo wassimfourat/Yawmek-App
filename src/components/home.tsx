@@ -2,6 +2,7 @@ import React from "react";
 import Header from "./TaskManager/Header";
 import TaskList from "./TaskManager/TaskList";
 import BottomNav from "./TaskManager/BottomNav";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 type Priority = "high" | "medium" | "low";
 type DefaultSort = "priority" | "date" | "title";
@@ -92,7 +93,7 @@ const Home = ({
   const completedTasks = filteredTasks.filter((task) => task.completed);
 
   return (
-    <div className="w-[420px] h-[900px] bg-background flex flex-col items-center">
+    <div className="w-[390px] h-[844px] bg-background flex flex-col relative">
       <Header
         selectedCategory={selectedCategory}
         onCategoryChange={handleCategoryChange}
@@ -100,16 +101,18 @@ const Home = ({
         isAddTaskOpen={isAddTaskOpen}
         onOpenChange={setIsAddTaskOpen}
       />
-      <TaskList
-        activeTasks={activeTasks}
-        completedTasks={completedTasks}
-        onToggleComplete={onToggleComplete}
-        onTogglePin={onTogglePin}
-        onEditTask={onEditTask}
-        onDeleteTask={onDeleteTask}
-        onToggleNotifications={onToggleNotifications}
-        defaultSort={defaultSort}
-      />
+      <ScrollArea className="flex-1 custom-scrollbar">
+        <TaskList
+          activeTasks={activeTasks}
+          completedTasks={completedTasks}
+          onToggleComplete={onToggleComplete}
+          onTogglePin={onTogglePin}
+          onEditTask={onEditTask}
+          onDeleteTask={onDeleteTask}
+          onToggleNotifications={onToggleNotifications}
+          defaultSort={defaultSort}
+        />
+      </ScrollArea>
       <BottomNav activeTab={activeTab} onTabChange={handleTabChange} />
     </div>
   );

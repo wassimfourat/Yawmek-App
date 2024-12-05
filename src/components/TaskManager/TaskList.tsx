@@ -92,36 +92,34 @@ const TaskList = ({
   const sortedCompletedTasks = sortTasks(filterTasks(completedTasks));
 
   return (
-    <div className="w-[420px] h-[740px] bg-background flex flex-col">
-      <div className="p-4">
+    <div className="w-full p-4 flex flex-col">
+      <div className="mb-4">
         <SearchBar value={searchQuery} onChange={setSearchQuery} />
       </div>
-      <ScrollArea className="flex-1 px-4 pb-4">
-        <div className="space-y-4">
-          <TaskSection
-            title={`Active Tasks (${sortedActiveTasks.length})`}
-            tasks={sortedActiveTasks}
-            isCollapsed={activeCollapsed}
-            onToggleCollapse={() => setActiveCollapsed(!activeCollapsed)}
-            onToggleComplete={onToggleComplete}
-            onTogglePin={onTogglePin}
-            onEditTask={onEditTask}
-            onDeleteTask={onDeleteTask}
-            onToggleNotifications={onToggleNotifications}
-          />
-          <TaskSection
-            title={`Completed Tasks (${sortedCompletedTasks.length})`}
-            tasks={sortedCompletedTasks}
-            isCollapsed={completedCollapsed}
-            onToggleCollapse={() => setCompletedCollapsed(!completedCollapsed)}
-            onToggleComplete={onToggleComplete}
-            onTogglePin={onTogglePin}
-            onEditTask={onEditTask}
-            onDeleteTask={onDeleteTask}
-            onToggleNotifications={onToggleNotifications}
-          />
-        </div>
-      </ScrollArea>
+      <div className="space-y-4 pb-20">
+        <TaskSection
+          title={`Active Tasks (${sortedActiveTasks.length})`}
+          tasks={sortedActiveTasks}
+          isCollapsed={activeCollapsed}
+          onToggleCollapse={() => setActiveCollapsed(!activeCollapsed)}
+          onToggleComplete={onToggleComplete}
+          onTogglePin={onTogglePin}
+          onEditTask={onEditTask}
+          onDeleteTask={onDeleteTask}
+          onToggleNotifications={onToggleNotifications}
+        />
+        <TaskSection
+          title={`Completed Tasks (${sortedCompletedTasks.length})`}
+          tasks={sortedCompletedTasks}
+          isCollapsed={completedCollapsed}
+          onToggleCollapse={() => setCompletedCollapsed(!completedCollapsed)}
+          onToggleComplete={onToggleComplete}
+          onTogglePin={onTogglePin}
+          onEditTask={onEditTask}
+          onDeleteTask={onDeleteTask}
+          onToggleNotifications={onToggleNotifications}
+        />
+      </div>
     </div>
   );
 };
