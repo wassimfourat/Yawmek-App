@@ -36,6 +36,12 @@ interface ProfileProps {
   tasks?: Task[];
 }
 
+interface User {
+  name: string;
+  email: string;
+  avatar?: string;
+}
+
 const Profile = ({
   onSortChange = () => {},
   defaultSort = "priority",
@@ -47,7 +53,7 @@ const Profile = ({
     "profile",
   );
   const [isEditProfileOpen, setIsEditProfileOpen] = React.useState(false);
-  const [user, setUser] = React.useState({
+  const [user, setUser] = React.useState<User>({
     name: "John Doe",
     email: "john@example.com",
     avatar: "",
@@ -63,11 +69,7 @@ const Profile = ({
     localStorage.setItem("notifications", String(enabled));
   };
 
-  const handleSaveProfile = (updatedUser: {
-    name: string;
-    email: string;
-    avatar?: string;
-  }) => {
+  const handleSaveProfile = (updatedUser: User) => {
     setUser(updatedUser);
     localStorage.setItem("user", JSON.stringify(updatedUser));
   };

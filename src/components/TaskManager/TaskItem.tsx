@@ -1,5 +1,8 @@
 import React from "react";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Pin,
   Calendar as CalendarIcon,
@@ -20,6 +23,11 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 type Priority = "high" | "medium" | "low";
 
@@ -42,6 +50,8 @@ interface TaskItemProps {
     category: "work" | "personal";
     priority: Priority;
     date: Date;
+    notifications?: boolean;
+    notificationTime?: Date;
   }) => void;
   onDelete?: (id: string) => void;
 }
@@ -64,6 +74,31 @@ const TaskItem = ({
 }: TaskItemProps) => {
   const [isEditOpen, setIsEditOpen] = React.useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = React.useState(false);
+  const [isNotificationPopoverOpen, setIsNotificationPopoverOpen] =
+    React.useState(false);
+  const [selectedTime, setSelectedTime] = React.useState(
+    notificationTime ? format(notificationTime, "HH:mm") : "09:00",
+  );
+
+  const handleNotificationToggle = (enabled: boolean) => {
+    if (enabled) {
+      const [hours, minutes] = selectedTime.split(":").map(Number);
+      const newDate = new Date();
+      newDate.setHours(hours, minutes);
+      onToggleNotifications(id, true, newDate);
+    } else {
+      onToggleNotifications(id, false);
+    }
+    setIsNotificationPopoverOpen(false);
+  };
+
+  const handleTimeChange = (time: string) => {
+    setSelectedTime(time);
+    const [hours, minutes] = time.split(":").map(Number);
+    const newDate = new Date();
+    newDate.setHours(hours, minutes);
+    onToggleNotifications(id, true, newDate);
+  };
 
   return (
     <>
@@ -96,21 +131,50 @@ const TaskItem = ({
                 )}
                 {notifications && notificationTime && (
                   <div className="flex items-center gap-1 text-xs text-purple-600">
-                    <Clock className="h-3 w-3" />
+                    <Bell className="h-3 w-3" />
                     {format(notificationTime, "HH:mm")}
                   </div>
                 )}
               </div>
             </div>
             <div className="flex items-center gap-1">
-              {notifications && (
-                <button
-                  onClick={() => onToggleNotifications(id, !notifications)}
-                  className="p-1.5 rounded-full hover:bg-accent text-purple-600"
-                >
-                  <Bell className="h-4 w-4" />
-                </button>
-              )}
+              <Popover
+                open={isNotificationPopoverOpen}
+                onOpenChange={setIsNotificationPopoverOpen}
+              >
+                <PopoverTrigger asChild>
+                  <button
+                    className={`p-1.5 rounded-full hover:bg-accent ${notifications ? "text-purple-600" : "text-muted-foreground hover:text-purple-600"}`}
+                  >
+                    <Bell className="h-4 w-4" />
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[240px]">
+                  <div className="grid gap-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Bell className="h-4 w-4 text-purple-600" />
+                        <Label>Alarm</Label>
+                      </div>
+                      <Switch
+                        checked={notifications}
+                        onCheckedChange={handleNotificationToggle}
+                      />
+                    </div>
+                    {notifications && (
+                      <div className="flex items-center gap-2">
+                        <Clock className="h-4 w-4 text-muted-foreground" />
+                        <Input
+                          type="time"
+                          value={selectedTime}
+                          onChange={(e) => handleTimeChange(e.target.value)}
+                          className="w-full"
+                        />
+                      </div>
+                    )}
+                  </div>
+                </PopoverContent>
+              </Popover>
               <button
                 onClick={() => setIsEditOpen(true)}
                 className="p-1.5 rounded-full hover:bg-accent text-muted-foreground hover:text-purple-600"

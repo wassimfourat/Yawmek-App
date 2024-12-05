@@ -10,9 +10,10 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { CalendarIcon, Flag } from "lucide-react";
+import { CalendarIcon, Clock } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import { Switch } from "@/components/ui/switch";
 
 type Priority = "high" | "medium" | "low";
 
@@ -25,6 +26,8 @@ interface EditTaskDialogProps {
     category: "work" | "personal";
     priority: Priority;
     date: Date;
+    notifications?: boolean;
+    notificationTime?: Date;
   };
   onSave?: (task: {
     id: string;
@@ -32,21 +35,10 @@ interface EditTaskDialogProps {
     category: "work" | "personal";
     priority: Priority;
     date: Date;
+    notifications?: boolean;
+    notificationTime?: Date;
   }) => void;
 }
-
-const getPriorityColor = (priority: Priority) => {
-  switch (priority) {
-    case "high":
-      return "text-red-500";
-    case "medium":
-      return "text-yellow-500";
-    case "low":
-      return "text-green-500";
-    default:
-      return "text-gray-500";
-  }
-};
 
 const EditTaskDialog = ({
   open = false,
@@ -57,6 +49,7 @@ const EditTaskDialog = ({
     category: "work" as const,
     priority: "medium" as Priority,
     date: new Date(),
+    notifications: false,
   },
   onSave = () => {},
 }: EditTaskDialogProps) => {
@@ -66,6 +59,11 @@ const EditTaskDialog = ({
   );
   const [priority, setPriority] = React.useState<Priority>(task.priority);
   const [date, setDate] = React.useState<Date>(task.date);
+  const [notifications, setNotifications] = React.useState(
+    task.notifications || false,
+  );
+  const [notificationTime, setNotificationTime] =
+    React.useState<string>("09:00");
 
   React.useEffect(() => {
     if (open) {
@@ -73,31 +71,51 @@ const EditTaskDialog = ({
       setCategory(task.category);
       setPriority(task.priority);
       setDate(task.date);
+      setNotifications(task.notifications || false);
+      setNotificationTime(
+        task.notificationTime
+          ? format(task.notificationTime, "HH:mm")
+          : "09:00",
+      );
     }
   }, [open, task]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSave({ id: task.id, title, category, priority, date });
+    if (!title.trim()) return;
+
+    let notificationTimeDate;
+    if (notifications) {
+      const [hours, minutes] = notificationTime.split(":").map(Number);
+      notificationTimeDate = new Date(date);
+      notificationTimeDate.setHours(hours, minutes);
+    }
+
+    onSave({
+      id: task.id,
+      title,
+      category,
+      priority,
+      date,
+      notifications,
+      notificationTime: notificationTimeDate,
+    });
     onOpenChange(false);
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[358px]">
-        <DialogTitle className="text-lg font-semibold mb-4">
-          Edit Task
-        </DialogTitle>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogTitle>Edit Task</DialogTitle>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="title">Task Title</Label>
               <Input
                 id="title"
-                placeholder="Enter task title"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                className="w-full"
+                placeholder="Enter task title"
               />
             </div>
 
@@ -132,18 +150,33 @@ const EditTaskDialog = ({
                 onValueChange={(value) => setPriority(value as Priority)}
                 className="flex gap-4"
               >
-                {(["high", "medium", "low"] as Priority[]).map((p) => (
-                  <div key={p} className="flex items-center space-x-2">
-                    <RadioGroupItem value={p} id={`priority-${p}`} />
-                    <Label
-                      htmlFor={`priority-${p}`}
-                      className={`cursor-pointer flex items-center gap-1 ${getPriorityColor(p)}`}
-                    >
-                      <Flag className="h-4 w-4" fill="currentColor" />
-                      <span className="capitalize">{p}</span>
-                    </Label>
-                  </div>
-                ))}
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="high" id="priority-high" />
+                  <Label
+                    htmlFor="priority-high"
+                    className="cursor-pointer text-red-500"
+                  >
+                    High
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="medium" id="priority-medium" />
+                  <Label
+                    htmlFor="priority-medium"
+                    className="cursor-pointer text-yellow-500"
+                  >
+                    Medium
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="low" id="priority-low" />
+                  <Label
+                    htmlFor="priority-low"
+                    className="cursor-pointer text-green-500"
+                  >
+                    Low
+                  </Label>
+                </div>
               </RadioGroup>
             </div>
 
@@ -172,6 +205,28 @@ const EditTaskDialog = ({
                 </PopoverContent>
               </Popover>
             </div>
+
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <Label>Notifications</Label>
+                <Switch
+                  checked={notifications}
+                  onCheckedChange={setNotifications}
+                />
+              </div>
+
+              {notifications && (
+                <div className="flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-muted-foreground" />
+                  <Input
+                    type="time"
+                    value={notificationTime}
+                    onChange={(e) => setNotificationTime(e.target.value)}
+                    className="w-full"
+                  />
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="flex justify-end gap-3">
@@ -179,16 +234,15 @@ const EditTaskDialog = ({
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
-              className="w-24"
             >
               Cancel
             </Button>
             <Button
               type="submit"
-              className="w-24 bg-purple-600 hover:bg-purple-700"
+              className="bg-purple-600 hover:bg-purple-700"
               disabled={!title.trim()}
             >
-              Save
+              Save Changes
             </Button>
           </div>
         </form>

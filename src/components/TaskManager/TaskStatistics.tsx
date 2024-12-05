@@ -1,7 +1,7 @@
 import React from "react";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { PieChart, BarChart3, TrendingUp } from "lucide-react";
+import { PieChart } from "lucide-react";
 
 type Priority = "high" | "medium" | "low";
 
@@ -77,8 +77,7 @@ const TaskStatistics = ({ tasks }: TaskStatisticsProps) => {
             </div>
             <Progress
               value={workPercentage}
-              className="h-2 bg-blue-100"
-              indicatorClassName="bg-blue-600"
+              className="h-2 bg-blue-100 [&>[role=progressbar]]:bg-blue-600"
             />
           </div>
           <div className="space-y-2">
@@ -90,8 +89,7 @@ const TaskStatistics = ({ tasks }: TaskStatisticsProps) => {
             </div>
             <Progress
               value={personalPercentage}
-              className="h-2 bg-green-100"
-              indicatorClassName="bg-green-600"
+              className="h-2 bg-green-100 [&>[role=progressbar]]:bg-green-600"
             />
           </div>
         </div>
@@ -112,8 +110,7 @@ const TaskStatistics = ({ tasks }: TaskStatisticsProps) => {
             </div>
             <Progress
               value={(priorityDistribution.high / totalTasks) * 100}
-              className="h-2 bg-red-100"
-              indicatorClassName="bg-red-600"
+              className="h-2 bg-red-100 [&>[role=progressbar]]:bg-red-600"
             />
           </div>
           <div className="space-y-2">
@@ -125,8 +122,7 @@ const TaskStatistics = ({ tasks }: TaskStatisticsProps) => {
             </div>
             <Progress
               value={(priorityDistribution.medium / totalTasks) * 100}
-              className="h-2 bg-yellow-100"
-              indicatorClassName="bg-yellow-600"
+              className="h-2 bg-yellow-100 [&>[role=progressbar]]:bg-yellow-600"
             />
           </div>
           <div className="space-y-2">
@@ -138,8 +134,7 @@ const TaskStatistics = ({ tasks }: TaskStatisticsProps) => {
             </div>
             <Progress
               value={(priorityDistribution.low / totalTasks) * 100}
-              className="h-2 bg-green-100"
-              indicatorClassName="bg-green-600"
+              className="h-2 bg-green-100 [&>[role=progressbar]]:bg-green-600"
             />
           </div>
         </div>
