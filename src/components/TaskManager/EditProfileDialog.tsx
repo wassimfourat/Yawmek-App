@@ -1,8 +1,13 @@
-import React from "react";
-import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import React, { useRef } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 import { User, Upload } from "lucide-react";
 
 interface EditProfileDialogProps {
@@ -28,15 +33,13 @@ const EditProfileDialog = ({
   const [name, setName] = React.useState(user.name);
   const [email, setEmail] = React.useState(user.email);
   const [avatar, setAvatar] = React.useState(user.avatar);
-  const [previewUrl, setPreviewUrl] = React.useState(user.avatar);
-  const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   React.useEffect(() => {
     if (open) {
       setName(user.name);
       setEmail(user.email);
       setAvatar(user.avatar);
-      setPreviewUrl(user.avatar);
     }
   }, [open, user]);
 
@@ -46,7 +49,6 @@ const EditProfileDialog = ({
       const reader = new FileReader();
       reader.onloadend = () => {
         const result = reader.result as string;
-        setPreviewUrl(result);
         setAvatar(result);
       };
       reader.readAsDataURL(file);
@@ -55,6 +57,7 @@ const EditProfileDialog = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!name.trim() || !email.trim()) return;
     onSave({ name, email, avatar });
     onOpenChange(false);
   };
@@ -62,43 +65,35 @@ const EditProfileDialog = ({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
-        <DialogTitle>Edit Profile</DialogTitle>
+        <DialogHeader>
+          <DialogTitle>Edit Profile</DialogTitle>
+        </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="flex flex-col items-center gap-4">
-            <div className="relative">
-              <div className="w-24 h-24 bg-purple-100 rounded-full flex items-center justify-center overflow-hidden group relative">
-                {previewUrl ? (
-                  <img
-                    src={previewUrl}
-                    alt="Profile"
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <User className="w-12 h-12 text-purple-600" />
-                )}
-                <div
-                  className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-                  onClick={() => fileInputRef.current?.click()}
-                >
-                  <Upload className="w-6 h-6 text-white" />
-                </div>
-              </div>
-              <input
-                type="file"
-                ref={fileInputRef}
-                className="hidden"
-                accept="image/*"
-                onChange={handleFileChange}
-              />
-            </div>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
+            <div
+              className="w-24 h-24 bg-purple-100 rounded-full flex items-center justify-center overflow-hidden group relative cursor-pointer"
               onClick={() => fileInputRef.current?.click()}
             >
-              Change Photo
-            </Button>
+              {avatar ? (
+                <img
+                  src={avatar}
+                  alt="Profile"
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <User className="w-12 h-12 text-purple-600" />
+              )}
+              <div className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                <Upload className="w-6 h-6 text-white" />
+              </div>
+            </div>
+            <input
+              type="file"
+              ref={fileInputRef}
+              className="hidden"
+              accept="image/*"
+              onChange={handleFileChange}
+            />
           </div>
 
           <div className="space-y-4">
@@ -131,7 +126,11 @@ const EditProfileDialog = ({
             >
               Cancel
             </Button>
-            <Button type="submit" className="bg-purple-600 hover:bg-purple-700">
+            <Button
+              type="submit"
+              className="bg-purple-600 hover:bg-purple-700"
+              disabled={!name.trim() || !email.trim()}
+            >
               Save Changes
             </Button>
           </div>

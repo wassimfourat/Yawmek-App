@@ -1,4 +1,4 @@
-import { Suspense, useState, useEffect } from "react";
+import { Suspense, useState } from "react";
 import { useRoutes, Routes, Route } from "react-router-dom";
 import Home from "./components/home";
 import Calendar from "./components/TaskManager/Calendar";
@@ -9,7 +9,6 @@ import { Toaster } from "@/components/ui/toaster";
 import { useToast } from "@/components/ui/use-toast";
 
 type Priority = "high" | "medium" | "low";
-type DefaultSort = "priority" | "date" | "title";
 
 interface Task {
   id: string;
@@ -25,7 +24,6 @@ interface Task {
 
 function App() {
   const { toast } = useToast();
-  const [defaultSort, setDefaultSort] = useState<DefaultSort>("priority");
   const [tasks, setTasks] = useState<Task[]>([
     {
       id: "1",
@@ -60,18 +58,6 @@ function App() {
       notificationTime: new Date(),
     },
   ]);
-
-  const handleSortChange = (newSort: DefaultSort) => {
-    setDefaultSort(newSort);
-    localStorage.setItem("defaultSort", newSort);
-  };
-
-  useEffect(() => {
-    const savedSort = localStorage.getItem("defaultSort") as DefaultSort;
-    if (savedSort) {
-      setDefaultSort(savedSort);
-    }
-  }, []);
 
   const handleToggleComplete = (taskId: string) => {
     setTasks((prevTasks) =>
@@ -178,12 +164,12 @@ function App() {
                   <Home
                     tasks={tasks}
                     setTasks={setTasks}
+                    defaultSort="priority"
                     onEditTask={handleEditTask}
                     onToggleComplete={handleToggleComplete}
                     onTogglePin={handleTogglePin}
                     onDeleteTask={handleDeleteTask}
                     onToggleNotifications={handleToggleNotifications}
-                    defaultSort={defaultSort}
                   />
                 }
               />
@@ -200,16 +186,7 @@ function App() {
                   />
                 }
               />
-              <Route
-                path="/profile"
-                element={
-                  <Profile
-                    tasks={tasks}
-                    onSortChange={handleSortChange}
-                    defaultSort={defaultSort}
-                  />
-                }
-              />
+              <Route path="/profile" element={<Profile tasks={tasks} />} />
             </Routes>
           </div>
           <Toaster />

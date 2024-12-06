@@ -75,7 +75,7 @@ const TaskStatistics = ({ tasks }: TaskStatisticsProps) => {
             </div>
             <Progress
               value={workPercentage}
-              className="h-2 bg-blue-950 dark:bg-blue-950 [&>[role=progressbar]]:bg-blue-500"
+              className="h-2 bg-blue-100 dark:bg-blue-950 [&>[role=progressbar]]:bg-blue-500"
             />
           </div>
           <div className="space-y-2">
@@ -87,7 +87,7 @@ const TaskStatistics = ({ tasks }: TaskStatisticsProps) => {
             </div>
             <Progress
               value={personalPercentage}
-              className="h-2 bg-green-950 dark:bg-green-950 [&>[role=progressbar]]:bg-green-500"
+              className="h-2 bg-green-100 dark:bg-green-950 [&>[role=progressbar]]:bg-green-500"
             />
           </div>
         </div>
@@ -108,7 +108,7 @@ const TaskStatistics = ({ tasks }: TaskStatisticsProps) => {
             </div>
             <Progress
               value={(priorityDistribution.high / totalTasks) * 100}
-              className="h-2 bg-red-950 dark:bg-red-950 [&>[role=progressbar]]:bg-red-500"
+              className="h-2 bg-red-100 dark:bg-red-950 [&>[role=progressbar]]:bg-red-500"
             />
           </div>
           <div className="space-y-2">
@@ -120,7 +120,7 @@ const TaskStatistics = ({ tasks }: TaskStatisticsProps) => {
             </div>
             <Progress
               value={(priorityDistribution.medium / totalTasks) * 100}
-              className="h-2 bg-yellow-950 dark:bg-yellow-950 [&>[role=progressbar]]:bg-yellow-500"
+              className="h-2 bg-yellow-100 dark:bg-yellow-950 [&>[role=progressbar]]:bg-yellow-500"
             />
           </div>
           <div className="space-y-2">
@@ -132,7 +132,7 @@ const TaskStatistics = ({ tasks }: TaskStatisticsProps) => {
             </div>
             <Progress
               value={(priorityDistribution.low / totalTasks) * 100}
-              className="h-2 bg-green-950 dark:bg-green-950 [&>[role=progressbar]]:bg-green-500"
+              className="h-2 bg-green-100 dark:bg-green-950 [&>[role=progressbar]]:bg-green-500"
             />
           </div>
         </div>
@@ -140,12 +140,16 @@ const TaskStatistics = ({ tasks }: TaskStatisticsProps) => {
 
       {/* Summary */}
       <div className="grid grid-cols-2 gap-4 pt-2">
-        <div className="p-4 bg-purple-950/20 rounded-lg">
-          <p className="text-sm text-purple-400">Total Tasks</p>
+        <div className="p-4 bg-purple-100 dark:bg-purple-950/20 rounded-lg">
+          <p className="text-sm text-purple-600 dark:text-purple-400">
+            Total Tasks
+          </p>
           <p className="text-2xl font-semibold">{totalTasks}</p>
         </div>
-        <div className="p-4 bg-purple-950/20 rounded-lg">
-          <p className="text-sm text-purple-400">Completed</p>
+        <div className="p-4 bg-purple-100 dark:bg-purple-950/20 rounded-lg">
+          <p className="text-sm text-purple-600 dark:text-purple-400">
+            Completed
+          </p>
           <p className="text-2xl font-semibold">{completedTasks}</p>
         </div>
       </div>
