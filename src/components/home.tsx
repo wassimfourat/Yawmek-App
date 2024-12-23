@@ -3,6 +3,8 @@ import Header from "./TaskManager/Header";
 import TaskList from "./TaskManager/TaskList";
 import BottomNav from "./TaskManager/BottomNav";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { supabase } from "@/lib/supabase";
+import { useToast } from "@/components/ui/use-toast";
 
 type Priority = "high" | "medium" | "low";
 type DefaultSort = "priority" | "date" | "title";
@@ -51,33 +53,67 @@ const Home = ({
   const [activeTab, setActiveTab] = React.useState<
     "home" | "calendar" | "profile"
   >("home");
+  const { toast } = useToast();
 
   const handleCategoryChange = (category: string) => {
     setSelectedCategory(category);
   };
 
-  const handleTaskSubmit = (newTask: {
+  const handleTaskSubmit = async (newTask: {
     title: string;
     category: "work" | "personal";
     date: Date;
     notifications: boolean;
     notificationTime?: Date;
   }) => {
-    setTasks((prevTasks) => [
-      ...prevTasks,
-      {
-        id: Date.now().toString(),
-        title: newTask.title,
-        category: newTask.category,
-        date: newTask.date,
-        completed: false,
-        pinned: false,
-        priority: "medium",
-        notifications: newTask.notifications,
-        notificationTime: newTask.notificationTime,
-      },
-    ]);
-    setIsAddTaskOpen(false);
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) throw new Error("No user found");
+
+      const { data, error } = await supabase
+        .from("tasks")
+        .insert([
+          {
+            user_id: user.id,
+            title: newTask.title,
+            category: newTask.category,
+            due_date: newTask.date.toISOString(),
+            completed: false,
+            pinned: false,
+            priority: "medium",
+            notifications: newTask.notifications,
+            notification_time: newTask.notificationTime?.toISOString(),
+          },
+        ])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      const formattedTask = {
+        ...data,
+        date: new Date(data.due_date),
+        notificationTime: data.notification_time
+          ? new Date(data.notification_time)
+          : undefined,
+      };
+
+      setTasks((prevTasks) => [formattedTask, ...prevTasks]);
+      setIsAddTaskOpen(false);
+
+      toast({
+        title: "Task Created",
+        description: "Your task has been successfully created.",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to create task",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleTabChange = (tab: "home" | "calendar" | "profile") => {

@@ -1,12 +1,16 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { User, Moon, Sun } from "lucide-react";
+import { User, Moon, Sun, LogOut, Lock, Mail } from "lucide-react";
 import BottomNav from "./BottomNav";
 import TaskStatistics from "./TaskStatistics";
 import { useTheme } from "@/lib/theme-provider";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import EditProfileDialog from "./EditProfileDialog";
+import SecuritySettingsDialog from "./SecuritySettingsDialog";
+import { supabase } from "@/lib/supabase";
+import { useNavigate } from "react-router-dom";
+import { useToast } from "@/components/ui/use-toast";
 
 type Priority = "high" | "medium" | "low";
 
@@ -26,26 +30,109 @@ interface ProfileProps {
 
 const Profile = ({ tasks = [] }: ProfileProps) => {
   const { theme, setTheme } = useTheme();
+  const navigate = useNavigate();
+  const { toast } = useToast();
   const [activeTab, setActiveTab] = React.useState<
     "home" | "calendar" | "profile"
   >("profile");
   const [isEditProfileOpen, setIsEditProfileOpen] = React.useState(false);
+  const [securityDialogOpen, setSecurityDialogOpen] = React.useState(false);
+  const [securityDialogType, setSecurityDialogType] = React.useState<
+    "email" | "password"
+  >("password");
   const [user, setUser] = React.useState({
-    name: "John Doe",
-    email: "john@example.com",
-    avatar: "https://dummyimage.com/100x100/6366f1/ffffff.png&text=JD",
+    name: "",
+    email: "",
+    avatar: "",
   });
 
-  const handleSaveProfile = (updatedUser: {
+  useEffect(() => {
+    getProfile();
+  }, []);
+
+  const getProfile = async () => {
+    try {
+      const {
+        data: { user: authUser },
+      } = await supabase.auth.getUser();
+      if (!authUser) throw new Error("No user found");
+
+      const { data, error } = await supabase
+        .from("users")
+        .select("*")
+        .eq("id", authUser.id)
+        .single();
+
+      if (error) throw error;
+
+      setUser({
+        name: data.full_name || "",
+        email: authUser.email || "",
+        avatar: data.avatar_url || "",
+      });
+    } catch (error) {
+      console.error("Error loading user data:", error);
+    }
+  };
+
+  const handleSaveProfile = async (updatedUser: {
     name: string;
     email: string;
     avatar?: string;
   }) => {
-    setUser({
-      ...user,
-      ...updatedUser,
-      avatar: updatedUser.avatar || user.avatar,
-    });
+    try {
+      const {
+        data: { user: authUser },
+      } = await supabase.auth.getUser();
+      if (!authUser) throw new Error("No user found");
+
+      const { error } = await supabase
+        .from("users")
+        .update({
+          full_name: updatedUser.name,
+          avatar_url: updatedUser.avatar,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", authUser.id);
+
+      if (error) throw error;
+
+      setUser({
+        ...user,
+        name: updatedUser.name,
+        avatar: updatedUser.avatar,
+      });
+
+      toast({
+        title: "Profile Updated",
+        description: "Your profile has been successfully updated.",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update profile",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      navigate("/welcome");
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to sign out",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const openSecurityDialog = (type: "email" | "password") => {
+    setSecurityDialogType(type);
+    setSecurityDialogOpen(true);
   };
 
   return (
@@ -80,6 +167,35 @@ const Profile = ({ tasks = [] }: ProfileProps) => {
           <Card className="p-6">
             <h3 className="text-lg font-semibold mb-4">Settings</h3>
             <div className="space-y-4">
+              {/* Security Settings */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Mail className="h-4 w-4" />
+                  <span>Email</span>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => openSecurityDialog("email")}
+                >
+                  Change
+                </Button>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Lock className="h-4 w-4" />
+                  <span>Password</span>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => openSecurityDialog("password")}
+                >
+                  Change
+                </Button>
+              </div>
+
               {/* Theme Toggle */}
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -98,6 +214,22 @@ const Profile = ({ tasks = [] }: ProfileProps) => {
                   {theme === "dark" ? "Light" : "Dark"}
                 </Button>
               </div>
+
+              {/* Logout Button */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <LogOut className="h-4 w-4" />
+                  <span>Logout</span>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleLogout}
+                  className="text-red-500 hover:text-red-600"
+                >
+                  Sign Out
+                </Button>
+              </div>
             </div>
           </Card>
 
@@ -111,6 +243,12 @@ const Profile = ({ tasks = [] }: ProfileProps) => {
         onOpenChange={setIsEditProfileOpen}
         user={user}
         onSave={handleSaveProfile}
+      />
+
+      <SecuritySettingsDialog
+        open={securityDialogOpen}
+        onOpenChange={setSecurityDialogOpen}
+        type={securityDialogType}
       />
 
       <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />

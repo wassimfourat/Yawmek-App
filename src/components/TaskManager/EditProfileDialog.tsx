@@ -9,6 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { User, Upload } from "lucide-react";
+import { supabase } from "@/lib/supabase";
+import { useToast } from "@/components/ui/use-toast";
 
 interface EditProfileDialogProps {
   open?: boolean;
@@ -31,34 +33,63 @@ const EditProfileDialog = ({
   onSave = () => {},
 }: EditProfileDialogProps) => {
   const [name, setName] = React.useState(user.name);
-  const [email, setEmail] = React.useState(user.email);
   const [avatar, setAvatar] = React.useState(user.avatar);
+  const [loading, setLoading] = React.useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { toast } = useToast();
 
   React.useEffect(() => {
     if (open) {
       setName(user.name);
-      setEmail(user.email);
       setAvatar(user.avatar);
     }
   }, [open, user]);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const result = reader.result as string;
-        setAvatar(result);
-      };
-      reader.readAsDataURL(file);
+    if (!file) return;
+
+    try {
+      setLoading(true);
+
+      // Delete old avatar if exists
+      if (avatar) {
+        const oldAvatarPath = avatar.split("/").pop();
+        if (oldAvatarPath) {
+          await supabase.storage.from("avatars").remove([oldAvatarPath]);
+        }
+      }
+
+      // Upload new avatar
+      const fileExt = file.name.split(".").pop();
+      const fileName = `${Math.random()}.${fileExt}`;
+      const { error: uploadError } = await supabase.storage
+        .from("avatars")
+        .upload(fileName, file);
+
+      if (uploadError) throw uploadError;
+
+      // Get public URL
+      const {
+        data: { publicUrl },
+      } = supabase.storage.from("avatars").getPublicUrl(fileName);
+
+      setAvatar(publicUrl);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to upload image",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim() || !email.trim()) return;
-    onSave({ name, email, avatar });
+    if (!name.trim()) return;
+    onSave({ name, email: user.email, avatar });
     onOpenChange(false);
   };
 
@@ -93,6 +124,7 @@ const EditProfileDialog = ({
               className="hidden"
               accept="image/*"
               onChange={handleFileChange}
+              disabled={loading}
             />
           </div>
 
@@ -111,9 +143,9 @@ const EditProfileDialog = ({
               <Input
                 id="email"
                 type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter your email"
+                value={user.email}
+                disabled
+                className="bg-muted"
               />
             </div>
           </div>
@@ -129,9 +161,9 @@ const EditProfileDialog = ({
             <Button
               type="submit"
               className="bg-purple-600 hover:bg-purple-700"
-              disabled={!name.trim() || !email.trim()}
+              disabled={!name.trim() || loading}
             >
-              Save Changes
+              {loading ? "Uploading..." : "Save Changes"}
             </Button>
           </div>
         </form>
